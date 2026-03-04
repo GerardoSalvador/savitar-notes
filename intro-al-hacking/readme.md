@@ -1919,4 +1919,4 @@ En esta clase, veremos los dos tipos de payloads utilizados en ataques informát
 
 Es importante tener en cuenta que el tipo de payload utilizado en un ataque dependerá del objetivo y de las medidas de seguridad implementadas. En general, los payloads Staged son más difíciles de detectar y son preferidos por los atacantes, mientras que los payloads Non-Staged son más fáciles de implementar pero también son más fáciles de detectar.
 
-test
+testing updates
