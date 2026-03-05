@@ -2077,3 +2077,7 @@ A continuación, se proporciona el enlace a estas herramientas:
 [Herramienta LSE](https://github.com/diego-treitos/linux-smart-enumeration)
 
 [Herramienta PSPY](https://github.com/DominicBreuker/pspy)
+
+[Herramienta para ver que puedo hacer con binarios y sus privilegios](https://gtfobins.github.io)
+
+[La biblia dice savitar](https://book.hacktricks.xyz)
