@@ -2036,3 +2036,5 @@ tty # Validamos que ya tengamos la consola
 ```
 
 mkfifo es un comando en sistemas tipo Unix (Linux, MacOs) utilizado para crear tuberías con nombre (named pipes), conocidas como archivos especiales FIFO (First In, First Out). Permite que procesos independientes se comuniquen entre sí enviando datos de un proceso a otro a través de un archivo en el disco que actúa como búfer en memoria.
+
+[One liners de reverse shells](https://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet)
