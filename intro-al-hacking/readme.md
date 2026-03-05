@@ -2038,3 +2038,25 @@ tty # Validamos que ya tengamos la consola
 mkfifo es un comando en sistemas tipo Unix (Linux, MacOs) utilizado para crear tuberías con nombre (named pipes), conocidas como archivos especiales FIFO (First In, First Out). Permite que procesos independientes se comuniquen entre sí enviando datos de un proceso a otro a través de un archivo en el disco que actúa como búfer en memoria.
 
 [One liners de reverse shells](https://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet)
+
+### Tipos de payloads (Staged y Non-Staged)
+
+En esta clase, veremos los dos tipos de payloads utilizados en ataques informáticos.
+
+* Payload staged: Es un tipo de payload que se **divide en dos o más etapas**. La primera etapa es una pequeña parte del código que se envía al objetivo, cuyo propósito es establecer una conexión segura entre el atacante y la máquina objetivo. Una vez que se establece la conexión, el atacante envía la segunda etapa del payload, que es la carga útil real del ataque. Este enfoque permite a los atacantes sortear medidas de seguridad adicionales, ya que la carga útil real no se envía hasta que se establece una conexión segura.
+* Payload non-staged: Es un tipo de payload que se envía como **una sola entidad** y **no se divide en múltiples etapas**. La carga útil completa se envía al objetivo en un solo paquete y se ejecuta inmediatamente después de ser recibida. Este enfoque es más simple que el anterior, pero también es más fácil de detectar por los sistemas de seguridad, ya que se envía todo el código malicioso de una sola vez.
+
+Es importante tener en cuenta que el tipo de payload utilizado en un ataque dependerá del objetivo y de las medidas de seguridad implementadas. En general, los payloads staged son más fáciles de implementar pero también son más fáciles de detectar.
+
+### Tipos de explotaciones (Manuales y automatizadas)
+
+En esta clase veremos los dos tipos de explotación utilizados en ataques informáticos: Manuales y Automatizados.
+
+* Explotación Manual: Es un tipo de explotación que se realiza de **manera manual** y requiere que el atacante tenga un conocimiento profundo del sistema y sus vulnerabilidades. En este enfoque, el atacante utiliza herramientas y técnicas específicas para identificar y explotar vulnerabilidades en un sistema objetivo. Este enfoque es más lento y requiere más esfuerzo y habilidad por parte del atacante, pero también es más preciso y permite un mayor control sobre el proceso de explotación
+* Explotación automatizada: Es un tipo de explotación que se realiza **automáticamente** mediante el uso de **herramientas automatizadas**, como scripts o programas diseñados específicamente para identificar y explotar vulnerabilidades en un sistema objetivo. Este enfoque es más rápido y menos laborioso que el enfoque manual, pero también puede ser menos preciso y puede generar más ruido en la red objetivo, lo que aumenta el riesgo de detección.
+
+Es importante tener en cuenta que el tipo de explotación utilizado en un ataque dependerá de los objetivos del atacante, sus habilidades y del nivel de seguridad implementado en el sistema objetivo. En general, los ataques de explotación manual son más precisos y discretos, pero también requieren más tiempo y habilidades. Por otro lado, los ataques de explotación automatizada son más rápidos y menos laboriosos, pero tambie´n pueden ser más ruidosos y menos precisos.
+
+A continuación, se os proporciona el enlace al proyecto de github que utilizamos para explicar ambos enfoques:
+
+[sqlinjection-training-app]( https://github.com/appsecco/sqlinjection-training-app)
