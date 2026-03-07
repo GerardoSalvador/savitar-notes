@@ -2176,7 +2176,7 @@ Ctrl + c # Salimos de la sesion de Mysql
 cd /var/www/html/
 nvim searchUsers.php
 # ----- searchUsers.php Inicio
-<?
+<?php
 ini_set("display_errors",1);
 ini_set("display_startup_errors",1);
 error_reporting(E_ALL);
@@ -2272,7 +2272,7 @@ union select group_concat(username,0x3a,password) from users-- -
 # Sin embargo hay momentos en los que el desarrollador no nos mostrará los errores, por lo tanto lo anterior no lo podremos ver
 # Modificamos el archivo searchUsers.php
 # ----- searchUsers.php inicio
-<?
+<?php
     $server = "localhost";
     $username = "s4vitar";
     $password = "s4vitar456";
@@ -2298,7 +2298,7 @@ id=-1' union select database()-- - # 'Porque tenemos solo una consulta en el arc
 # La pagina está sanitizada y sin mostrar errores
 # Modificamos el archivo searchUsers.php
 # ----- searchUsers.php inicio
-<?
+<?php
     $server = "localhost";
     $username = "s4vitar";
     $password = "s4vitar456";
