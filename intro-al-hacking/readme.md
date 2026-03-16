@@ -3694,5 +3694,36 @@ Compartimos a continuación el enlace comprimido ZIP que utilizamos en esta clas
 [Lab Setup](https://seedsecuritylabs.org/Labs_20.04/Files/Web_CSRF_Elgg/Labsetup.zip)
 
 ```bash
+wget https://seedsecuritylabs.org/Labs_20.04/Files/Web_CSRF_Elgg/Labsetup.zip
+ls
+unzip Labsetup.zip
+cd dir
+docker-compose up -d
+
+docker ps
+cat /etc/hosts
+
+# Agregar direcciones ip al etc host sino no va funcionar
+10.9.0.5 www.seed-server.com
+10.9.0.5 www.example32.com
+10.9.0.105 www.atacker32.com
+
+ping -c 1 www.seed-server.com # Nos tiene que responder
+docker ps
+docker exec -it elgg-10.9.0.5 bash
+
+# Vamos al navegador
+http://www.seed-server.com # Debemos ver el log in
+
+nvim creds.txt 
+alice:seedalice
+samy:seedsamy
+
+# Iniciamos sesion en el navegador como alice
+# Abrimos burpsuite como root para interceptar la peticion, habilitamos foxy
+# Cambiamos nuestro nombre de usuario
+
+# Esta vulnerabilidad la vamos a hacer manual
+
 
 ```
